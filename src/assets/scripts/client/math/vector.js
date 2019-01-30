@@ -1,5 +1,6 @@
 import _forEach from 'lodash/forEach';
 import _map from 'lodash/map';
+import _isEqual from 'lodash/isEqual';
 import {
     sin,
     cos,
@@ -7,6 +8,7 @@ import {
     clamp
 } from './core';
 import { degreesToRadians } from '../utilities/unitConverters';
+import StaticPositionModel from '../base/StaticPositionModel';
 
 /**
  * Computes length of 2D vector
@@ -511,3 +513,33 @@ export const positive_intersection_with_rect = (pos, dir, rectPos, rectSize) => 
     // Failed to compute intersection due to numerical precision.
     return undefined;
 };
+
+/**
+ * Create a StaticPositionModel for each poly
+ *
+ * If the last entry is the same as the first, remove it because the path will be closed automatically.
+ *
+ * @method buildPolyPositionModels
+ * @param polyList {array}
+ * @param airportPosition {StaticPositionModel}
+ * @param magneticNorth {number}
+ * @return polyPositionModels {array}
+ */
+export function buildPolyPositionModels(polyList, airportPosition, magneticNorth) {
+    const polyPositionModels = _map(polyList, (poly) => {
+        return new StaticPositionModel(poly, airportPosition, magneticNorth);
+    });
+
+    // TODO: Though its reusability is not real likely, this might as well be made into an external helper
+    // shape shouldn't fully close; will draw with 'cc.closepath()' so we remove the last item
+    const firstIndex = 0;
+    const lastIndex = polyPositionModels.length - 1;
+    const firstIndexRelativePosition = polyPositionModels[firstIndex].relativePosition;
+    const lastIndexRelativePosition = polyPositionModels[lastIndex].relativePosition;
+
+    if (_isEqual(firstIndexRelativePosition, lastIndexRelativePosition)) {
+        polyPositionModels.pop();
+    }
+
+    return polyPositionModels;
+}

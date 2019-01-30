@@ -5,6 +5,7 @@
 ### Bugfixes
 
 ### Enhancements & Refactors
+- <a href="https://github.com/openscope/openscope/issues/391" target="_blank">#391</a> - Add support for multiple airspace sections
 
 # 6.17.1 (May 21, 2020)
 ### Hotfixes
