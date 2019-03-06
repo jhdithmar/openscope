@@ -427,18 +427,18 @@ export default class AirportModel {
             );
         });
 
-        this.ctr_radius = Math.max(
-            ..._map(this.perimeter, (vertexPosition) => vlen(
-                vsub(
-                    vertexPosition.relativePosition,
+        this.ctr_radius = 0;
+
+        for (const airspaceModel of this.airspace) {
+            this.ctr_radius = Math.max(this.ctr_radius, ..._map(airspaceModel.poly, (vertexPosition) => vlen(
+                vsub(vertexPosition.relativePosition,
                     DynamicPositionModel.calculateRelativePosition(
                         this.rangeRings.center,
                         this._positionModel,
                         this.magneticNorth
-                    )
-                )
-            ))
-        );
+                    ))
+            )));
+        }
     }
 
     /**
