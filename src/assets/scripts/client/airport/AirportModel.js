@@ -5,6 +5,7 @@ import _clamp from 'lodash/clamp';
 import _forEach from 'lodash/forEach';
 import _get from 'lodash/get';
 import _map from 'lodash/map';
+import _head from 'lodash/head';
 import AirportController from './AirportController';
 import AirspaceModel from './AirspaceModel';
 import DynamicPositionModel from '../base/DynamicPositionModel';
@@ -374,8 +375,8 @@ export default class AirportModel {
         this.mapCollection = new MapCollection(data.maps, data.defaultMaps, this.positionModel, this.magneticNorth);
 
         this.loadTerrain();
-        this.buildAirspacePerimeter(data.perimeter);
         this.buildAirspace(data.airspace);
+        this.buildAirspacePerimeter(data.perimeter);
         this.setActiveRunwaysFromNames(data.arrivalRunway, data.departureRunway);
         this.buildRestrictedAreas(data.restricted);
         this.updateCurrentWind(data.wind);
@@ -403,7 +404,11 @@ export default class AirportModel {
      * @param airspace
      */
     buildAirspacePerimeter(perimeter) {
-        this.perimeter = buildPolyPositionModels(perimeter, this._positionModel, this._positionModel.magneticNorth);
+        if (perimeter) {
+            this.perimeter = buildPolyPositionModels(perimeter, this._positionModel, this._positionModel.magneticNorth);
+        } else {
+            this.perimeter = _head(this.airspace).poly;
+        }
     }
 
     /**
