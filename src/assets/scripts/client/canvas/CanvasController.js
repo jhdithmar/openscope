@@ -1672,9 +1672,7 @@ export default class CanvasController {
             round(CanvasStageModel.halfHeight + CanvasStageModel._panY)
         );
 
-        this._drawAirspace(cc);
-        this._drawRangeRings(cc);
-
+        this._drawAirspaceWithRangeRings(cc);
         cc.restore();
     }
 
@@ -1682,69 +1680,68 @@ export default class CanvasController {
      * Draw polygonal airspace border
      *
      * @for CanvasController
-     * @method _drawAirspace
+     * @method _drawAirspaceWithRangeRings
      * @param cc {HTMLCanvasContext}
      * @private
      */
-    _drawAirspace(cc) {
+    _drawAirspaceWithRangeRings(cc) {
         const airport = AirportController.airport_get();
-
-        cc.strokeStyle = this.theme.SCOPE.AIRSPACE_PERIMETER;
-        cc.fillStyle = this.theme.SCOPE.AIRSPACE_FILL;
-
-        // draw perimeter
-        if (airport.perimeter) {
-            const poly = _map(airport.perimeter, (v) => v.relativePosition);
-
-            this._drawPoly(cc, poly);
-            // use perimeter as clipping mask for range rings
-            cc.clip();
-        }
+        const rangeRingRadius = this._calculateRangeRingRadius(airport);
 
         // draw airspaces
         for (let i = 0; i < airport.airspace.length; i++) {
             const airspace = airport.airspace[i];
 
+            cc.save();
+
+            cc.strokeStyle = this.theme.SCOPE.AIRSPACE_PERIMETER;
+            cc.fillStyle = this.theme.SCOPE.AIRSPACE_FILL;
+
             this._drawPoly(cc, airspace.relativePoly, false);
+
+            if (rangeRingRadius === 0) {
+                // prevent infinite loop
+                continue;
+            }
+
+            cc.clip();
+
+            // cc.linewidth = 1;
+            cc.strokeStyle = this.theme.SCOPE.RANGE_RING_COLOR;
+
+            // Fill up airportModel's ctr_radius with rings of the specified radius
+            for (let i = 1; i * rangeRingRadius < airport.ctr_radius; i++) {
+                cc.beginPath();
+                cc.arc(0, 0, rangeRingRadius * CanvasStageModel.scale * i, 0, tau());
+                cc.stroke();
+            }
+
+            cc.restore();
         }
     }
 
     /**
+     * Calculates the range ring radius
+     *
      * @for CanvasController
-     * @method _drawRangeRings
-     * @param cc {HTMLCanvasContext}
+     * @method _calculateRangeRingRadius
+     * @param airport {AirportModel}
      * @private
      */
-    _drawRangeRings(cc) {
-        const airportModel = AirportController.airport_get();
+    _calculateRangeRingRadius(airport) {
         const userValue = GameController.getGameOption(GAME_OPTION_NAMES.RANGE_RINGS);
         const useDefault = userValue === 'default';
-        const defaultRangeRings = airportModel.rangeRings;
+        const defaultRangeRings = airport.rangeRings;
 
         if (userValue === 'off' || (useDefault && defaultRangeRings.enabled === false)) {
-            return;
+            return 0;
         }
-
-        let rangeRingRadius = km(defaultRangeRings.radius_nm);
 
         if (!useDefault) {
-            rangeRingRadius = km(parseInt(userValue, 10));
+            return km(parseInt(userValue, 10));
         }
 
-        if (rangeRingRadius === 0) {
-            // prevent infinite loop
-            return;
-        }
-
-        cc.linewidth = 1;
-        cc.strokeStyle = this.theme.SCOPE.RANGE_RING_COLOR;
-
-        // Fill up airportModel's ctr_radius with rings of the specified radius
-        for (let i = 1; i * rangeRingRadius < airportModel.ctr_radius; i++) {
-            cc.beginPath();
-            cc.arc(0, 0, rangeRingRadius * CanvasStageModel.scale * i, 0, tau());
-            cc.stroke();
-        }
+        return km(defaultRangeRings.radius_nm);
     }
 
     /**
