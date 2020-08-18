@@ -4,7 +4,7 @@
 ### Bugfixes
 
 ### Enhancements & Refactors
-- <a href="https://github.com/openscope/openscope/issues/1583" target="_blank">#1538</a> - Update EDDF
+- <a href="https://github.com/openscope/openscope/issues/1583" target="_blank">#1583</a> - Update EDDF
 
 # 6.19.0 (August 10, 2020)
 ### New Features
